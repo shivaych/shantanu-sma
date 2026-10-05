@@ -1,0 +1,50 @@
+# ---------------------------------------------------------------------------
+# sma campaign config (Shantanu Kumar, SDE internship outreach to HR heads).
+# Email copy lives in profile/templates/, the resume in profile/.
+# ---------------------------------------------------------------------------
+
+me:
+  name: "Shantanu Kumar"
+  email: "shantanukumar.iitkgp@gmail.com"   # the Gmail account that sends (needs an App Password in .env)
+  college: "IIT Kharagpur"
+
+contacts:
+  # The ONLY mailing database. `sma import` reads every table row (SNo, Name, Email, Title, Company).
+  pdf: "C:/Users/HP/Downloads/CompanyWise HR contact (1).pdf"
+  # Shared inboxes get "Hi {first_name}," wrong, so they are skipped on import.
+  skip_role_addresses: true
+
+limits:
+  # Daily cap on NEW (touch 1) emails, by number of days that actually sent so far. Last value = steady state.
+  # The reference agent's Workspace account was suspended for spam after ~900 cold sends in one day with
+  # 11% bounces; a personal Gmail is stricter (500/day hard limit). Ramp slowly and stay well under it.
+  warmup: [30, 50, 75, 100, 125, 150]
+  hard_daily_total: 180             # touch 1 + follow-ups together, per day
+  max_per_company_per_day: 1        # by email domain; a second HR contact at the same company waits a day
+  timezone: "Asia/Kolkata"
+  send_window: { start: "10:00", end: "17:30" }
+  send_days: ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  # `sma run` is meant to be triggered every run_interval_minutes (Task Scheduler). Each run sends its share
+  # of what is left of today's cap, so the day's mail is spread across the window instead of one burst.
+  run_interval_minutes: 60
+  max_per_run: 30
+  gap_seconds: [40, 110]            # random pause between two sends
+  # Auto-pause when bounces among the most recent first-touch sends reach this share (`sma resume` to continue).
+  bounce_pause_threshold: 0.10
+  bounce_window: 50
+  bounce_min_sample: 20
+
+sequence:
+  # Day offsets of each touch from touch 1. Follow-ups go in the same thread; any reply stops the sequence.
+  touch_days: [0, 4, 10]
+
+# true = nothing is sent and the database is not changed: emails are written to outbox/ as .eml files.
+# Turn off only after `sma check` passes and you have read a few files in outbox/.
+dry_run: false
+
+paths:
+  db: "data/leads.db"
+  suppression: "data/suppression.txt"   # one address (or @domain) per line; never mailed
+  outbox: "outbox"
+  templates: "profile/templates"
+  resume: "profile/Shantanu_resume.pdf"   # attached to touch 1 only

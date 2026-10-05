@@ -1,0 +1,56 @@
+# Hourly `sma run` on GitHub instead of the laptop. 04:30-11:30 UTC = 10:00-17:00 IST, Mon-Fri;
+# sma itself enforces the 10:00-17:30 IST window and daily caps, so a late or extra trigger is harmless.
+name: sma-run
+
+on:
+  schedule:
+    - cron: "30 4-11 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Never two runs at once: both would send from the same lead list.
+concurrency:
+  group: sma
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      SMA_ROOT: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Open vault
+        id: vault
+        env:
+          SMA_VAULT_KEY: ${{ secrets.SMA_VAULT_KEY }}
+        run: bash scripts/vault.sh open
+
+      - name: Send
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: sma run
+
+      # Every send is committed to leads.db as it happens, so save even if the run failed or timed out;
+      # otherwise the next run would mail the same people again.
+      - name: Save vault
+        if: always() && steps.vault.outcome == 'success'
+        env:
+          SMA_VAULT_KEY: ${{ secrets.SMA_VAULT_KEY }}
+        run: bash scripts/vault.sh save
+
+      - name: Report
+        if: always() && steps.vault.outcome == 'success'
+        run: sma report

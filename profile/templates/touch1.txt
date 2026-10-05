@@ -1,0 +1,24 @@
+# Touch 1. First non-comment line = subject (several variants separated by " || " are rotated per lead).
+# Then a blank line, then the body. Lines starting with # are notes and never sent.
+# Placeholders: {first_name} {company} {title} {my_name} {my_first} {my_college}
+# **text** is sent bold (HTML part); the plain-text part drops the asterisks.
+# Copy supplied by the user 2026-10-04, verbatim ([Name] -> {first_name}, [Company Name] -> {company}); key words bolded,
+# "* " bullets rendered as "• " (the user asked earlier for no literal asterisks).
+Quick 1-min read inside, shantanu from iit kgp
+
+Hi {first_name},
+
+I’m Shantanu, a pre-final year student at **IIT Kharagpur** with experience in **software development, AI/ML, and DSA**. I’m currently looking for **SDE / AI-ML internship** opportunities where I can contribute to real-world engineering problems.
+
+A few highlights of my experience:
+
+• **OmniDEL.ai - AI Engineering**: Built an **LLM agent** that reduced quote turnaround time by **85%** (2 hrs → 15 min) and data pipelines serving **65 live properties**.
+• **Fitsol - AI Engineering**: Built an **ESG intelligence pipeline** processing **1,800+ reports** and trained ML ensembles achieving **0.78 log-R²** for carbon-emission prediction.
+• **Seisei.ai - Full Stack Development**: Worked on **React, backend APIs, payments, JWT authentication, OAuth, and DynamoDB**.
+• **DSA** - **1600+ rating** on LeetCode/CodeChef with **400+ problems** solved.
+
+I’d be grateful if you could let me know if there are any relevant opportunities at **{company}**. I’ve attached my resume for your reference.
+
+Best regards,
+Shantanu Kumar
+IIT Kharagpur

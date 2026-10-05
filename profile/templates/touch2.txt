@@ -1,0 +1,13 @@
+# Touch 2 (follow-up). Sent as a reply in the touch-1 thread, so the subject is always "Re: <touch 1 subject>":
+# this file is body only. No resume attachment on follow-ups (it is already in the thread).
+Hi {first_name},
+
+Following up on my note from last week in case it got buried.
+
+Quick version: pre-final year at **IIT Kharagpur**, AI engineering at **OmniDEL.ai** and **Fitsol**, full-stack development at **Seisei.ai**, and **1600+ on LeetCode/CodeChef**. I'm happy to take a short assignment or test so the work can speak for itself.
+
+If {company} is taking **SDE / AI-ML interns**, could you point me to the right person or process?
+
+Best,
+Shantanu Kumar
+IIT Kharagpur
