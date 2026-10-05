@@ -75,7 +75,7 @@ To change the resume: `bash scripts/vault.sh open`, replace `profile/Shantanu_re
 | Daily caps | new emails ramp 30, 50, 75, 100, 125, then 150 per sending day; 180 total including follow-ups |
 | Spacing | at most 1 new email per company (email domain) per day; follow-ups go before new emails |
 | Replies | `replied` (stop and read it), out-of-office ignored, "not interested / unsubscribe / has left" -> `closed` + suppressed |
-| Bounces | `bounced` + added to `data/suppression.txt`; 10%+ bounces over the last 50 first emails auto-pauses |
+| Bounces | `bounced` + added to `data/suppression.txt`; 50%+ bounces over the last 50 first emails auto-pauses (once 20 are out); a first email to a domain with no mail server (DNS) is skipped |
 | Gmail refusal | any SMTP "sending denied" / limit error pauses the campaign immediately |
 | Never | sends to an address twice for the same touch, to a role inbox (hr@, careers@), or to a name it can't greet |
 

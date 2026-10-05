@@ -40,6 +40,14 @@ class FakeMailer(Mailer):
         pass
 
 
+@pytest.fixture(autouse=True)
+def live_domains(monkeypatch):
+    """No DNS in tests: every domain accepts mail unless a test says otherwise."""
+    dead: set[str] = set()
+    monkeypatch.setattr("sma.verify.domain_accepts_mail", lambda d: d not in dead)
+    return dead
+
+
 @pytest.fixture
 def cfg(tmp_path: Path) -> Config:
     return Config(
@@ -266,3 +274,13 @@ def test_bold_markup_becomes_html_and_plain_is_clean(cfg, conn):
     assert "**" not in plain and "IIT Kharagpur" in plain
     assert "<b>IIT Kharagpur</b>" in html and "<b>Acme</b>" in html and "<br>• <b>DSA</b>" in html
     assert any(p.get_filename() == "Shantanu_resume.pdf" for p in msg.walk())
+
+
+def test_dead_domain_is_skipped_not_sent(cfg, conn, live_domains):
+    live_domains.add("beta.io")
+    m = FakeMailer(cfg)
+    stats = runner.run(conn, cfg, m, now=at("2026-10-05"), sleep=no_sleep, anytime=True, log=lambda s: None)
+    assert "chirag@beta.io" not in [msg["To"] for msg in m.sent]
+    assert stats["dead_domain"] == 1
+    lead = lead_by_email(conn, "chirag@beta.io")
+    assert lead["state"] == "skipped" and lead["note"] == "domain has no mail server"

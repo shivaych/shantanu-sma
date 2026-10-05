@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable
 from datetime import datetime
 
-from . import inbox, scheduler
+from . import inbox, scheduler, verify
 from .config import Config
 from .db import get_meta, set_meta, utcnow_iso
 from .mailer import Mailer, SentRef
@@ -79,6 +79,15 @@ def run(conn: sqlite3.Connection, cfg: Config, mailer: Mailer, *, anytime: bool 
         current = conn.execute("SELECT * FROM leads WHERE id = ?", (lead["id"],)).fetchone()
         if current["touches_sent"] != touch_n - 1 or current["state"] not in ("new", "in_sequence"):
             continue                                   # replied / bounced since the plan was made
+        if touch_n == 1 and cfg.limits.check_domains:
+            domain = current["email"].rsplit("@", 1)[-1]
+            if verify.domain_accepts_mail(domain) is False:
+                conn.execute("UPDATE leads SET state = 'skipped', note = 'domain has no mail server' WHERE id = ?",
+                             (lead["id"],))
+                conn.commit()
+                stats["dead_domain"] = stats.get("dead_domain", 0) + 1
+                log(f"  skipped (domain has no mail server): {current['email']}")
+                continue
         msg = build_for(conn, cfg, mailer, current, touch_n)
         try:
             ref = mailer.send(msg)

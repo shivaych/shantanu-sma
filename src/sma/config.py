@@ -42,6 +42,7 @@ class Limits:
     bounce_pause_threshold: float = 0.10
     bounce_window: int = 50
     bounce_min_sample: int = 20
+    check_domains: bool = True
 
 
 @dataclass

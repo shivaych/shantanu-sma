@@ -30,9 +30,12 @@ limits:
   max_per_run: 30
   gap_seconds: [40, 110]            # random pause between two sends
   # Auto-pause when bounces among the most recent first-touch sends reach this share (`sma resume` to continue).
-  bounce_pause_threshold: 0.10
+  bounce_pause_threshold: 0.50
   bounce_window: 50
   bounce_min_sample: 20
+  # Before a first email, skip the lead if its domain has no mail server (DNS MX/A). Catches dead domains,
+  # not deleted mailboxes on a working domain.
+  check_domains: true
 
 sequence:
   # Day offsets of each touch from touch 1. Follow-ups go in the same thread; any reply stops the sequence.
