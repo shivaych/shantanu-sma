@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The repo is public, so everything private (data/leads.db, data/suppression.txt, the resume) lives encrypted
+# The repo is public, so everything private (data/*.db, data/suppression.txt, the resume) lives encrypted
 # on the single-commit branch `state`, as vault.tar.gz.enc (AES-256, key = SMA_VAULT_KEY).
 #   scripts/vault.sh open   fetch `state` and decrypt into data/ and profile/
 #   scripts/vault.sh save   encrypt data/ + resume and force-push them as the new `state`
@@ -13,7 +13,7 @@ fi
 : "${SMA_VAULT_KEY:?SMA_VAULT_KEY is not set (GitHub secret, or .env locally)}"
 export SMA_VAULT_KEY
 
-FILES=(data/leads.db data/suppression.txt profile/Shantanu_resume.pdf)
+FILES=(data/leads.db data/suppression.txt profile/Shantanu_resume.pdf data/leads_gmail_campaign.db)
 crypt() { openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:SMA_VAULT_KEY "$@"; }
 
 case "${1:-}" in

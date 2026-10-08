@@ -11,11 +11,11 @@ from rich.console import Console
 from rich.table import Table
 
 from . import config as config_mod
-from . import contacts, inbox, runner, scheduler, templates
+from . import contacts, inbox, runner, scheduler, sheets, templates
 from .db import STATES, connect, get_meta, lead_by_email, set_meta, set_state, utcnow_iso
 from .mailer import Mailer
 
-app = typer.Typer(add_completion=False, no_args_is_help=True, help="Cold outreach for Shantanu Kumar to the HR contact PDF.")
+app = typer.Typer(add_completion=False, no_args_is_help=True, help="Cold outreach for Shantanu Kumar to a folder of contact spreadsheets.")
 for _stream in (sys.stdout, sys.stderr):      # Windows consoles default to cp1252, which can't print "→" or "²"
     if hasattr(_stream, "reconfigure"):
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -36,15 +36,22 @@ def _lead_or_exit(conn, email: str):
 
 
 @app.command("import")
-def import_cmd(pdf: Optional[Path] = typer.Option(None, help="defaults to contacts.pdf in config.yaml"),
+def import_cmd(source: Optional[Path] = typer.Option(None, help="a folder of .xlsx/.csv or a PDF; defaults to contacts.folder"),
                inspect: bool = typer.Option(False, help="show what would be imported, write nothing")):
-    """Read the HR contact PDF into the lead database (safe to re-run)."""
+    """Read the contact spreadsheets (or the HR PDF) into the lead database (safe to re-run)."""
     cfg, conn = _ctx()
-    path = pdf or Path(cfg.contacts.pdf)
+    path = source or Path(cfg.contacts.folder or cfg.contacts.pdf)
     if not path.exists():
         con.print(f"[red]{path} not found[/]")
         raise typer.Exit(1)
-    rows = contacts.read_pdf(path)
+    if path.is_dir():
+        rows, sources = sheets.read_folder(path)
+        for name, n in sources:
+            if inspect and n:
+                con.print(f"  {n:6}  {name}", highlight=False)
+        _write_import_csv(cfg.path("db").parent / "contacts_import.csv", rows)
+    else:
+        rows = contacts.read_pdf(path)
     if inspect:
         t = Table("SNo", "Name", "First", "Email", "Title", "Company")
         for c in rows[:25] + rows[-5:]:
@@ -54,6 +61,15 @@ def import_cmd(pdf: Optional[Path] = typer.Option(None, help="defaults to contac
         return
     stats = contacts.import_contacts(conn, rows, cfg.path("suppression"), cfg.contacts.skip_role_addresses)
     con.print(stats)
+
+
+def _write_import_csv(out: Path, rows) -> None:
+    """Everything read from the spreadsheets, one row per address, to check the column mapping by eye."""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["sno", "first_name", "name", "email", "title", "company"])
+        w.writerows([c.sno, c.first_name, c.name, c.email, c.title, c.company] for c in rows)
 
 
 @app.command()

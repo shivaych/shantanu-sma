@@ -1,34 +1,37 @@
 # ---------------------------------------------------------------------------
-# sma campaign config (Shantanu Kumar, SDE internship outreach to HR heads).
+# sma campaign config (Shantanu Kumar, SDE internship outreach).
 # Email copy lives in profile/templates/, the resume in profile/.
 # ---------------------------------------------------------------------------
 
 me:
   name: "Shantanu Kumar"
-  email: "shantanukumar.iitkgp@gmail.com"   # the Gmail account that sends (needs an App Password in .env)
+  # The account that sends (Google Workspace, App Password in .env / GitHub secret). Until 2026-10-08 the campaign sent
+  # from shantanukumar.iitkgp@gmail.com to the HR PDF; that database is kept as data/leads_gmail_campaign.db.
+  email: "shantanukumar@kgpian.iitkgp.ac.in"
   college: "IIT Kharagpur"
 
 contacts:
-  # The ONLY mailing database. `sma import` reads every table row (SNo, Name, Email, Title, Company).
-  pdf: "C:/Users/HP/Downloads/CompanyWise HR contact (1).pdf"
+  # The mailing database: every .xlsx / .csv in this folder (`sma import`, run on the laptop; the result is in the vault).
+  folder: "E:/mail data/New folder"
   # Shared inboxes get "Hi {first_name}," wrong, so they are skipped on import.
   skip_role_addresses: true
 
 limits:
   # Daily cap on NEW (touch 1) emails, by number of days that actually sent so far. Last value = steady state.
   # The reference agent's Workspace account was suspended for spam after ~900 cold sends in one day with
-  # 11% bounces; a personal Gmail is stricter (500/day hard limit). Ramp slowly and stay well under it.
-  warmup: [30, 50, 75, 100, 125, 150]
-  hard_daily_total: 180             # touch 1 + follow-ups together, per day
-  max_per_company_per_day: 1        # by email domain; a second HR contact at the same company waits a day
+  # 11% bounces, so this new account ramps up to 500 over its first week instead of starting there.
+  warmup: [100, 200, 300, 400, 500]
+  hard_daily_total: 500             # touch 1 + follow-ups together, per day (follow-ups go first)
+  # by email domain (Gmail, Yahoo etc. exempt); the lists hold 500+ people at KPMG, Deloitte, Zomato
+  max_per_company_per_day: 10
   timezone: "Asia/Kolkata"
   send_window: { start: "10:00", end: "17:30" }
   send_days: ["Mon", "Tue", "Wed", "Thu", "Fri"]
   # `sma run` is meant to be triggered every run_interval_minutes (Task Scheduler). Each run sends its share
   # of what is left of today's cap, so the day's mail is spread across the window instead of one burst.
   run_interval_minutes: 60
-  max_per_run: 30
-  gap_seconds: [40, 110]            # random pause between two sends
+  max_per_run: 80
+  gap_seconds: [20, 45]             # random pause between two sends; ~65 per hourly run fit in ~40 min
   # Auto-pause when bounces among the most recent first-touch sends reach this share (`sma resume` to continue).
   bounce_pause_threshold: 0.50
   bounce_window: 50

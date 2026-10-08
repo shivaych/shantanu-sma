@@ -24,6 +24,7 @@ class Me:
 
 @dataclass
 class Contacts:
+    folder: str = ""
     pdf: str = ""
     skip_role_addresses: bool = True
 

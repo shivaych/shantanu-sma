@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from sma import contacts, inbox, runner, scheduler, templates
+from sma import contacts, inbox, runner, scheduler, sheets, templates
 from sma.config import Config, Limits, Paths
 from sma.db import connect, get_meta, lead_by_email
 from sma.mailer import Inbound, Mailer, SentRef
@@ -133,6 +133,59 @@ def test_real_pdf_rows_stay_aligned():
     # pdftotext's layout drifts around row 35; the table read must keep each email next to its own company
     assert rows[35].email.endswith("@" + rows[35].company.lower() + ".com")
     assert all(c.email and c.company for c in rows.values())
+
+
+def test_sheet_with_header_maps_columns_and_prefers_work_email():
+    rows = [["notes"], ["First Name", "Last Name", "Designation", "Company", "Personal Email", "Work Email", "Email Status"],
+            ["Asha", "Rao", "Head HR", "Acme", "asha.r@gmail.com", "asha@acme.com", "Verified"],
+            ["Bina", "Shah", "PM", "Beta", "bina@gmail.com", "", ""]]
+    got = sheets.read_sheet(rows)
+    assert [(c.name, c.email, c.title, c.company) for c in got] == [
+        ("Asha Rao", "asha@acme.com", "Head HR", "Acme"), ("Bina Shah", "bina@gmail.com", "PM", "Beta")]
+
+
+def test_sheet_without_header_finds_email_and_name_columns():
+    rows = [["Northpeak Partners", "Tarun Bhatia", "Partner", "t.bhatia@northpeak.vc, tarunb@gmail.com"],
+            ["Northpeak Partners", "Meera Iyer", "Managing Director", "meera@northpeak.vc"],
+            ["Lakeside Ventures", "Arjun Menon", "Co-Founder", "arjun@lakeside.vc"]]
+    got = sheets.read_sheet(rows)
+    assert [(c.name, c.email) for c in got] == [("Tarun Bhatia", "t.bhatia@northpeak.vc"),   # first address only
+                                                ("Meera Iyer", "meera@northpeak.vc"), ("Arjun Menon", "arjun@lakeside.vc")]
+
+
+def test_tidy_drops_surname_companies_and_org_names():
+    c = sheets.tidy(contacts.Contact(0, "Rohit", "rohit.verma@acme.com", "", "Verma"))
+    assert c.company == "" and c.first_name == "Rohit"
+    assert sheets.tidy(contacts.Contact(0, "Zenith Capital", "z@zenithcap.com", "", "Zenith Capital")).first_name == ""
+    assert sheets.tidy(contacts.Contact(0, "Brightline", "a@brightline.com", "", "VC")).company == ""
+
+
+def test_read_folder_dedupes_and_fills_company_from_domain(tmp_path):
+    (tmp_path / "a.csv").write_text("Name,Firm,Email\nNeel,Kapur,nkapur@deloitte.com\nDev Sinha,Deloitte,devs@deloitte.com\n",
+                                    encoding="utf-8")
+    (tmp_path / "b.csv").write_text("Name,Title,Company,Email\nNeel Kapur,Manager,,NKapur@Deloitte.com\n", encoding="utf-8")
+    out, sources = sheets.read_folder(tmp_path)
+    assert [(c.sno, c.email, c.title, c.company) for c in out] == [
+        (1, "nkapur@deloitte.com", "Manager", "Deloitte"), (2, "devs@deloitte.com", "", "Deloitte")]
+    assert sources == [("a.csv", 2), ("b.csv", 1)]
+
+
+def test_company_must_fit_its_domain(tmp_path):
+    rows = ["Name,Firm,Email", "Ira Sethi,,x@y.com", ",Ira Sethi,ira.sethi@bain.com"]
+    rows += [f"P{i}x,Malhotra,p{i}@bain.com" for i in range(2)] + [f"Q{i}x,,q{i}@bain.com" for i in range(6)]
+    rows += [f"T{i}x,Kearney,t{i}@kearney.com" for i in range(3)] + ["Ram,Ram Co,ram@kearney.com"]
+    (tmp_path / "a.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    got = {c.email: c for c in sheets.read_folder(tmp_path)[0]}
+    assert (got["ira.sethi@bain.com"].name, got["ira.sethi@bain.com"].company) == ("Ira Sethi", "")
+    assert got["p0@bain.com"].company == ""                     # 2 of 9 bain.com rows, not in the domain
+    assert got["ram@kearney.com"].company == "Kearney"          # filled / overridden from the plausible name
+
+
+def test_free_mail_is_exempt_from_the_per_company_cap(cfg):
+    c = connect(cfg.path("db"))
+    contacts.import_contacts(c, [contacts.Contact(i, n, f"{n.lower()}@gmail.com", "", "X") for i, n in
+                                 enumerate(["Asha", "Bina", "Chitra"], 1)], cfg.path("suppression"))
+    assert len(scheduler.fresh_leads(c, cfg, "2026-10-09", 10)) == 3
 
 
 # --- templates ----------------------------------------------------------------

@@ -16,6 +16,10 @@ from .db import utcnow_iso
 EMAIL_RE = re.compile(r"^[a-z0-9._%+'-]+@[a-z0-9.-]+\.[a-z]{2,}$")
 ROLE_LOCALS = {"hr", "careers", "career", "jobs", "job", "info", "contact", "hello", "admin", "talent", "recruitment",
                "recruiting", "recruiter", "hiring", "people", "support", "office", "team", "mail", "enquiry", "sales"}
+# Personal mailbox providers: many unrelated people share the domain, so the per-company daily cap does not apply.
+FREE_MAIL = {"gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.in", "yahoo.in", "ymail.com", "outlook.com", "hotmail.com",
+             "live.com", "live.in", "msn.com", "icloud.com", "me.com", "rediffmail.com", "aol.com", "protonmail.com",
+             "proton.me", "zoho.com", "gmx.com", "mail.com", "hotmail.co.in", "outlook.in"}
 HONORIFICS = {"dr", "mr", "mrs", "ms", "miss", "prof", "er", "ca", "adv", "shri", "smt"}
 # A "name" holding any of these is a company or a shared inbox, not a person to greet.
 NON_PERSON = {"ltd", "pvt", "llc", "inc", "infotech", "info", "jobs", "job", "careers", "career", "team",

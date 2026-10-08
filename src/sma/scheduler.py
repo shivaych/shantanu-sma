@@ -8,6 +8,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from .config import Config
+from .contacts import FREE_MAIL
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -73,7 +74,7 @@ def due_followups(conn: sqlite3.Connection, cfg: Config, today: str) -> list[sql
 
 
 def fresh_leads(conn: sqlite3.Connection, cfg: Config, today: str, limit: int) -> list[sqlite3.Row]:
-    """Touch-1 candidates in list order, at most max_per_company_per_day per email domain today."""
+    """Touch-1 candidates in list order, at most max_per_company_per_day per email domain today (Gmail etc. exempt)."""
     if limit <= 0:
         return []
     per_domain: dict[str, int] = {}
@@ -83,7 +84,7 @@ def fresh_leads(conn: sqlite3.Connection, cfg: Config, today: str, limit: int) -
     cap = cfg.limits.max_per_company_per_day
     picked = []
     for lead in conn.execute("SELECT * FROM leads WHERE state = 'new' AND touches_sent = 0 ORDER BY sno, id"):
-        if per_domain.get(lead["domain"], 0) >= cap:
+        if lead["domain"] not in FREE_MAIL and per_domain.get(lead["domain"], 0) >= cap:
             continue
         per_domain[lead["domain"]] = per_domain.get(lead["domain"], 0) + 1
         picked.append(lead)
