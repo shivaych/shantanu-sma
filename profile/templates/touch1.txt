@@ -13,7 +13,7 @@ I’m Shantanu, a pre-final year student at **IIT Kharagpur** with experience in
 A few highlights of my experience:
 
 • **OmniDEL.ai - AI Engineering**: Built an **LLM agent** that reduced quote turnaround time by **85%** (2 hrs → 15 min) and data pipelines serving **65 live properties**.
-• **Fitsol - AI Engineering**: Built an **ESG intelligence pipeline** processing **1,800+ reports** and trained ML ensembles achieving **0.78 log-R²** for carbon-emission prediction.
+• **Fitsol - AI Engineering**: Built an **ESG intelligence pipeline** processing **1,800+ reports** and trained ML ensembles achieving **0.78 log-R²** for carbon prediction.
 • **Seisei.ai - Full Stack Development**: Worked on **React, backend APIs, payments, JWT authentication, OAuth, and DynamoDB**.
 • **DSA** - **1600+ rating** on LeetCode/CodeChef with **400+ problems** solved.
 
