@@ -19,8 +19,9 @@ contacts:
 limits:
   # Daily cap on NEW (touch 1) emails, by number of days that actually sent so far. Last value = steady state.
   # The reference agent's Workspace account was suspended for spam after ~900 cold sends in one day with
-  # 11% bounces, so this new account ramps up to 500 over its first week instead of starting there.
-  warmup: [100, 200, 300, 400, 500]
+  # 11% bounces. This account was meant to ramp 100 -> 500 over its first week; since 2026-10-13 it goes
+  # straight to 500 at the user's request.
+  warmup: [500]
   hard_daily_total: 500             # touch 1 + follow-ups together, per day (follow-ups go first)
   # by email domain (Gmail, Yahoo etc. exempt); the lists hold 500+ people at KPMG, Deloitte, Zomato
   max_per_company_per_day: 10
